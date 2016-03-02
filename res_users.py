@@ -65,7 +65,7 @@ class res_users(models.Model):
         openid = token_data['openid']
         user_ids = self.search([("openid", "=", openid)])
         if not user_ids:
-            set_cookie_and_redirect('/weixin/name_email?code=' + code + '&state=' + self.dbname)
+            return set_cookie_and_redirect('/weixin/name_email?code=' + code + '&state=' + self.dbname)
         assert len(user_ids) == 1
         user_ids[0].write({'access_token': token_data['access_token'],
                             'refresh_token': token_data['refresh_token']})
