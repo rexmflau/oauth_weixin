@@ -72,7 +72,6 @@ class res_users(models.Model):
             raise Exception(token_data['errcode'])
         openid = token_data['openid']
         user_ids = self.search([("openid", "=", openid)])
-        assert len(user_ids) == 1
         return user_ids, token_data
     def check_credentials(self, cr, uid, password):
         try:

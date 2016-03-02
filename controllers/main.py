@@ -70,6 +70,7 @@ class weixin(http.Controller):
                 u = registry.get('res.users')
                 user_ids, token_data = u.weixin_auth_oauth(cr, SUPERUSER_ID, kw)
                 if user_ids:
+                    assert len(user_ids) == 1
                     credentials = u.weixin_auth_signin(cr, SUPERUSER_ID, token_data, user_ids, kw)
                 else:
                     url = "/weixin/name_email?" + werkzeug.url_encode(json.dumps(token_data)) + '&state=' + kw['state']
