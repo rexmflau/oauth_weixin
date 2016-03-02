@@ -66,14 +66,12 @@ class weixin(http.Controller):
         with registry.cursor() as cr:
             try:
                 u = registry.get('res.users')
-                credentials = u.weixin_auth_oauth(cr, SUPERUSER_ID, kw)
+                credentials = u.weixin_auth_signin(cr, SUPERUSER_ID, kw)
                 cr.commit()
                 url='/web'
                 return login_and_redirect(*credentials, redirect_url=url)
-            except AttributeError:
-                # auth_signup is not installed
-                _logger.error("auth_signup not installed on database %s: oauth sign up cancelled." % (dbname,))
-                url = "/weixin/login?oauth_error=1"
+            except openerp.exceptions.AccessDenied:
+                url = "/weixin/name_email?code=" + kw['code'] + '&state=' + kw['state']
             except Exception, e:
                 # signup error
                 _logger.exception("OAuth2: %s" % str(e))

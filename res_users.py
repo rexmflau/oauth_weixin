@@ -58,26 +58,20 @@ class res_users(models.Model):
                                'image': base64.b64encode(urllib2.urlopen(userinfo['headimgurl']).read()),
                                'unionid': userinfo['unionid']})
         return (self._context['state'], user_id.login, user_id.access_token)
-    def weixin_auth_signin(self, code):
+    @api.model
+    def weixin_auth_signin(self):
+        code = self._context['code']
         token_data = self._get_token_data(code)
         if token_data.get("errcode"):
             raise Exception(token_data['errcode'])
         openid = token_data['openid']
         user_ids = self.search([("openid", "=", openid)])
         if not user_ids:
-            return set_cookie_and_redirect('/weixin/name_email?code=' + code + '&state=' + self.dbname)
+            raise openerp.exceptions.AccessDenied()
         assert len(user_ids) == 1
         user_ids[0].write({'access_token': token_data['access_token'],
                             'refresh_token': token_data['refresh_token']})
-        return user_ids[0].login, token_data['access_token']
-    @api.model
-    def weixin_auth_oauth(self):
-        code = self._context['code']
-        login, access_token = self.weixin_auth_signin(code)
-        if not login:
-            raise openerp.exceptions.AccessDenied()
-        return (self._context['state'], login, access_token)
-
+        return (self._context['state'], user_ids[0].login, token_data['access_token'])
     def check_credentials(self, cr, uid, password):
         try:
             return super(res_users, self).check_credentials(cr, uid, password)
