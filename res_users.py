@@ -43,17 +43,13 @@ class res_users(models.Model):
         return json.loads(response)
     @api.model
     def weixin_auth_signup(self):
-        code = self._context['code']
         name = self._context['name']
         email = self._context['email']
-        token_data = self._get_token_data(code)
-        if token_data.get("errcode"):
-            raise Exception(token_data['errcode'])
-        userinfo = self._weixin_get_userinfo(token_data)
-        user_id = self.search([('login', '=', 'templatesupplier')])[0].copy(default={'openid': token_data['openid'],
+        userinfo = self._weixin_get_userinfo(self._context['access_token'])
+        user_id = self.search([('login', '=', 'templatesupplier')])[0].copy(default={'openid': userinfo['openid'],
                                'login': email,
-                               'access_token': token_data['access_token'],
-                               'refresh_token': token_data['refresh_token'],
+                               'access_token': self._context['access_token'],
+                               'refresh_token': self._context['refresh_token'],
                                'name': name,
                                'sex': userinfo['sex'],
                                'lang': userinfo['language'],
@@ -61,7 +57,7 @@ class res_users(models.Model):
                                'street': userinfo['country'],
                                'image': base64.b64encode(urllib2.urlopen(userinfo['headimgurl']).read()),
                                'unionid': userinfo['unionid']})
-        return (self._context['state'], user_id.login, user_id.access_token)
+        return (self._context['state'], user_id.login, user_id.access_token), self._context
     @api.model
     def weixin_auth_signin(self):
         code = self._context['code']
@@ -75,7 +71,7 @@ class res_users(models.Model):
         assert len(user_ids) == 1
         user_ids[0].write({'access_token': token_data['access_token'],
                             'refresh_token': token_data['refresh_token']})
-        return (self._context['state'], user_ids[0].login, token_data['access_token'])
+        return (self._context['state'], user_ids[0].login, token_data['access_token']), token_data
     def check_credentials(self, cr, uid, password):
         try:
             return super(res_users, self).check_credentials(cr, uid, password)

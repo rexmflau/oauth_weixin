@@ -44,7 +44,7 @@ class weixin(http.Controller):
                 return 0
             if not validateEmail(kw['email']):
                 qcontext['error'] = _('email error')
-        if 'error' not in qcontext and kw.get('state') and kw.get('code') and kw.get('name') and kw.get('email'):
+        if 'error' not in qcontext and kw.get('state') and kw.get('access_token') and kw.get('name') and kw.get('email'):
             dbname = kw['state']
             registry = RegistryManager.get(dbname)
             u = registry.get('res.users')
@@ -66,12 +66,12 @@ class weixin(http.Controller):
         with registry.cursor() as cr:
             try:
                 u = registry.get('res.users')
-                credentials = u.weixin_auth_signin(cr, SUPERUSER_ID, kw)
+                credentials, token_data = u.weixin_auth_signin(cr, SUPERUSER_ID, kw)
                 cr.commit()
                 url='/web'
                 return login_and_redirect(*credentials, redirect_url=url)
             except openerp.exceptions.AccessDenied:
-                url = "/weixin/name_email?code=" + kw['code'] + '&state=' + kw['state']
+                url = "/weixin/name_email?" + werkzeug.url_encode(token_data) + '&state=' + kw['state']
             except Exception, e:
                 # signup error
                 _logger.exception("OAuth2: %s" % str(e))
