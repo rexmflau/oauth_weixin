@@ -68,7 +68,6 @@ class weixin(http.Controller):
         with registry.cursor() as cr:
             try:
                 u = registry.get('res.users')
-                token_data = u._get_token_data(cr, SUPERUSER_ID, kw)
                 user_ids, token_data = u.weixin_auth_oauth(cr, SUPERUSER_ID, kw)
                 if user_ids:
                     credentials = u.weixin_auth_signin(cr, SUPERUSER_ID, token_data, user_ids, kw)
