@@ -3,6 +3,7 @@ from openerp import models, fields, api
 import werkzeug.urls
 import urlparse
 from openerp import SUPERUSER_ID
+from openerp.addons.web.controllers.main import set_cookie_and_redirect, login_and_redirect
 import urllib2
 import json
 import openerp
@@ -40,55 +41,42 @@ class res_users(models.Model):
         f = urllib2.urlopen(url)
         response = f.read()
         return json.loads(response)
-    def _weixin_get_group(self):
-        dataobj = self.env['ir.model.data']
-        result = []
-        try:
-            dummy, group_id = dataobj.get_object_reference('base', 'group_user')
-            result.append(group_id)
-            dummy, group_id = dataobj.get_object_reference('base', 'group_no_one')
-            result.append(group_id)
-            dummy, group_id = dataobj.get_object_reference('base', 'group_portal')
-            result.append(group_id)
-        except ValueError:
-            # If these groups does not exists anymore
-            pass
-        return result
-    def weixin_auth_signin(self, token_data):
-        try:
-            openid = token_data['openid']
-            user_ids = self.search([("openid", "=", openid)])
-            if not user_ids:
-                raise openerp.exceptions.AccessDenied()
-            assert len(user_ids) == 1
-            user_ids[0].write({'access_token': token_data['access_token'],
-                               'refresh_token': token_data['refresh_token']})
-            return user_ids[0].login
-        except openerp.exceptions.AccessDenied:
-            userinfo = self._weixin_get_userinfo(token_data)
-            user_id = self.search([('login', '=', 'templatesupplier')])[0].copy(default={'openid': token_data['openid'],
-                                   'login': token_data['openid'],
-                                   'access_token': token_data['access_token'],
-                                   'refresh_token': token_data['refresh_token'],
-                                   'name': userinfo['nickname'],
-                                   'sex': userinfo['sex'],
-                                   'lang': userinfo['language'],
-                                   'zip': userinfo['province'],
-                                   'street': userinfo['country'],
-                                   'image': base64.b64encode(urllib2.urlopen(userinfo['headimgurl']).read()),
-                                   'unionid': userinfo['unionid']})
-            return user_id.login
-    @api.model
-    def weixin_auth_oauth(self):
-        code = self._context['code']
+    def weixin_auth_signup(self, code, name, email):
         token_data = self._get_token_data(code)
         if token_data.get("errcode"):
             raise Exception(token_data['errcode'])
-        login = self.weixin_auth_signin(token_data)
+        userinfo = self._weixin_get_userinfo(token_data)
+        user_id = self.search([('login', '=', 'templatesupplier')])[0].copy(default={'openid': token_data['openid'],
+                               'login': email,
+                               'access_token': token_data['access_token'],
+                               'refresh_token': token_data['refresh_token'],
+                               'name': name,
+                               'sex': userinfo['sex'],
+                               'lang': userinfo['language'],
+                               'zip': userinfo['province'],
+                               'street': userinfo['country'],
+                               'image': base64.b64encode(urllib2.urlopen(userinfo['headimgurl']).read()),
+                               'unionid': userinfo['unionid']})
+        return (self._context['state'], user_id.login, user_id.access_token)
+    def weixin_auth_signin(self, code):
+        token_data = self._get_token_data(code)
+        if token_data.get("errcode"):
+            raise Exception(token_data['errcode'])
+        openid = token_data['openid']
+        user_ids = self.search([("openid", "=", openid)])
+        if not user_ids:
+            set_cookie_and_redirect('/weixin/name_email?code=' + code + '&state=' + self.dbname)
+        assert len(user_ids) == 1
+        user_ids[0].write({'access_token': token_data['access_token'],
+                            'refresh_token': token_data['refresh_token']})
+        return user_ids[0].login, token_data['access_token']
+    @api.model
+    def weixin_auth_oauth(self):
+        code = self._context['code']
+        login, access_token = self.weixin_auth_signin(code)
         if not login:
             raise openerp.exceptions.AccessDenied()
-        # return user credentials
-        return (self._context['state'], login, token_data['access_token'])
+        return (self._context['state'], login, access_token)
 
     def check_credentials(self, cr, uid, password):
         try:

@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <openerp>
     <data>
-        <template id="oauth_weixin.login" name="Weixin Login">
+        <template id="oauth_weixin.login" inherit_id="web.login" name="weixin login">
+            <xpath expr="//button[@type='submit']" position="before">
+                <a href="https://open.weixin.qq.com/connect/qrconnect?appid=wx937137a662417298&amp;redirect_uri=https%3A%2F%2Fbaoshunkeji.com%2Fweixin%2Fsignin&amp;response_type=code&amp;scope=snsapi_login&amp;state=bs#wechat_redirect" class="btn btn-link pull-right">Weixin</a>
+                <a t-if="signup_enabled" t-attf-href="/web/signup?{{ keep_query() }}" class="btn btn-link pull-right">Sign up</a>
+                <a t-if="reset_password_enabled" t-attf-href="/web/reset_password?{{ keep_query() }}" class="btn btn-link pull-right">Reset Password</a>
+            </xpath>
+        </template>
+        <!--<template id="oauth_weixin.login" name="Weixin Login">
             <t t-call="web.login_layout">
                 <div id="login_container" class="text-center"></div>
                 <script src="https://res.wx.qq.com/connect/zh_CN/htmledition/js/wxLogin.js"></script>
@@ -17,7 +24,7 @@
                 $("div[class=oe_website_login_container]").css("width","300px");
                 </script>
             </t>
-        </template>
+        </template>-->
         <template id="oauth_weixin.name_email" name="Weixin name_email">
             <t t-call="web.login_layout">
                 <form class="oe_login_form" role="form" method="post">
@@ -30,6 +37,9 @@
                         <label for="email" class="control-label">E-mail</label>
                         <input type="text" name="email" id="email" class="form-control" required="required" t-att-autofocus="autofocus"/>
                     </div>
+                    <p class="alert alert-danger" t-if="error">
+                        <t t-esc="error"/>
+                    </p>
                     <div class="clearfix oe_login_buttons">
                         <button type="submit" class="btn btn-primary">OK</button>
                     </div>
