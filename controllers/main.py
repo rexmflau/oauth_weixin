@@ -35,7 +35,7 @@ class weixin(http.Controller):
     @http.route('/weixin/name_email', auth='public', website=True)
     def weixin_name_email(self, **kw):
         qcontext = request.params.copy()
-        if kw.get('email') or not kw.get('name') or kw.get('name') == '':
+        if kw.get('email') and kw.get('name'):
             import re
             def validateEmail(email):
                 if email:
@@ -43,7 +43,7 @@ class weixin(http.Controller):
                         if re.match("^.+\\@(\\[?)[a-zA-Z0-9\\-\\.]+\\.([a-zA-Z]{2,3}|[0-9]{1,3})(\\]?)$", email) != None:
                             return 1
                 return 0
-            if not validateEmail(kw['email']):
+            if not validateEmail(kw['email']) or kw['name'] == '':
                 qcontext['error'] = _('name or email error')
         if 'error' not in qcontext and kw.get('state') and kw.get('access_token') and kw.get('name') and kw.get('email'):
             dbname = kw['state']
