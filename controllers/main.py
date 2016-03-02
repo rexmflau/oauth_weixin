@@ -24,7 +24,8 @@ class OAuthLogin(Home):
 class weixin(http.Controller):
     @http.route('/baoshunkeji.com.html', auth='public')
     def wosign(self, **kw):
-        return 'VATd4tAahG22n07h1fbXghJg7pD9iIOvDq5bNBYT8fw='
+        return werkzeug.url_encode({'a':'a','b':'b'})
+        #return 'VATd4tAahG22n07h1fbXghJg7pD9iIOvDq5bNBYT8fw='
     @http.route('/weixin/login', auth='public', website=True)
     def weixin_login(self, **kw):
         weixin_auth_provider = request.registry.get('weixin.auth.provider')
@@ -34,7 +35,7 @@ class weixin(http.Controller):
     @http.route('/weixin/name_email', auth='public', website=True)
     def weixin_name_email(self, **kw):
         qcontext = request.params.copy()
-        if kw.get('email'):
+        if kw.get('email') or not kw.get('name') or kw.get('name') == '':
             import re
             def validateEmail(email):
                 if email:
@@ -43,7 +44,7 @@ class weixin(http.Controller):
                             return 1
                 return 0
             if not validateEmail(kw['email']):
-                qcontext['error'] = _('email error')
+                qcontext['error'] = _('name or email error')
         if 'error' not in qcontext and kw.get('state') and kw.get('access_token') and kw.get('name') and kw.get('email'):
             dbname = kw['state']
             registry = RegistryManager.get(dbname)
@@ -52,6 +53,7 @@ class weixin(http.Controller):
                 try:
                     credentials = u.weixin_auth_signup(cr, SUPERUSER_ID, kw)
                     url='/web'
+                    cr.commit()
                     return login_and_redirect(*credentials, redirect_url=url)
                 except Exception, e:
                     _logger.exception("OAuth2: %s" % str(e))
@@ -66,12 +68,16 @@ class weixin(http.Controller):
         with registry.cursor() as cr:
             try:
                 u = registry.get('res.users')
-                credentials, token_data = u.weixin_auth_signin(cr, SUPERUSER_ID, kw)
+                token_data = u._get_token_data(cr, SUPERUSER_ID, kw)
+                user_ids, token_data = u.weixin_auth_oauth(cr, SUPERUSER_ID, kw)
+                if user_ids:
+                    credentials = u.weixin_auth_signin(cr, SUPERUSER_ID, token_data, user_ids, kw)
+                else:
+                    url = "/weixin/name_email?" + werkzeug.url_encode(json.dumps(token_data)) + '&state=' + kw['state']
+                    return set_cookie_and_redirect(url)
                 cr.commit()
                 url='/web'
                 return login_and_redirect(*credentials, redirect_url=url)
-            except openerp.exceptions.AccessDenied:
-                url = "/weixin/name_email?" + werkzeug.url_encode(token_data) + '&state=' + kw['state']
             except Exception, e:
                 # signup error
                 _logger.exception("OAuth2: %s" % str(e))
