@@ -66,8 +66,8 @@ class res_users(models.Model):
                             'refresh_token': token_data['refresh_token']})
         return (self._context['state'], user_ids[0].login, token_data['access_token'])
     @api.model
-    def weixin_auth_oauth(self, **kw):
-        token_data = self._get_token_data(kw)
+    def weixin_auth_oauth(self):
+        token_data = self._get_token_data()
         if token_data.get("errcode"):
             raise Exception(token_data['errcode'])
         openid = token_data['openid']
