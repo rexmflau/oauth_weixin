@@ -41,7 +41,11 @@ class res_users(models.Model):
         f = urllib2.urlopen(url)
         response = f.read()
         return json.loads(response)
-    def weixin_auth_signup(self, code, name, email):
+    @api.model
+    def weixin_auth_signup(self):
+        code = self._context['code']
+        name = self._context['name']
+        email = self._context['email']
         token_data = self._get_token_data(code)
         if token_data.get("errcode"):
             raise Exception(token_data['errcode'])
