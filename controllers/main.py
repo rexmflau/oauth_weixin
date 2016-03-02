@@ -73,7 +73,9 @@ class weixin(http.Controller):
                     assert len(user_ids) == 1
                     credentials = u.weixin_auth_signin(cr, SUPERUSER_ID, token_data, user_ids, kw)
                 else:
-                    json_token_data = {'openid': token_data['openid'], 'access_token': token_data['access_token']}
+                    json_token_data = {'openid': token_data['openid'],
+                                       'refresh_token': token_data['refresh_token'],
+                                       'access_token': token_data['access_token']}
                     url = "/weixin/name_email?" + werkzeug.url_encode(json_token_data) + '&state=' + kw['state']
                     return set_cookie_and_redirect(url)
                 cr.commit()
