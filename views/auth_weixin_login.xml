@@ -3,7 +3,9 @@
     <data>
         <template id="oauth_weixin.login" inherit_id="web.login" name="weixin login">
             <xpath expr="//button[@type='submit']" position="before">
-                <a href="https://open.weixin.qq.com/connect/qrconnect?appid=wx937137a662417298&amp;redirect_uri=https%3A%2F%2Fbaoshunkeji.com%2Fweixin%2Fsignin&amp;response_type=code&amp;scope=snsapi_login&amp;state=bs#wechat_redirect" class="btn btn-link pull-right">Weixin</a>
+                <a href="https://open.weixin.qq.com/connect/qrconnect?appid=wx937137a662417298&amp;redirect_uri=https%3A%2F%2Fbaoshunkeji.com%2Fweixin%2Fsignin&amp;response_type=code&amp;scope=snsapi_login&amp;state=bs#wechat_redirect" class="btn btn-link pull-right">
+                    <img src="/oauth_weixin/static/src/img/icon32_wx_logo.png" />
+                </a>
             </xpath>
         </template>
         <!--<template id="oauth_weixin.login" name="Weixin Login">
