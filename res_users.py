@@ -55,6 +55,7 @@ class res_users(models.Model):
                                'name': name,
                                'sex': userinfo['sex'],
                                'lang': userinfo['language'],
+                               'email': email,
                                'zip': userinfo['province'],
                                'street': userinfo['country'],
                                'image': base64.b64encode(urllib2.urlopen(userinfo['headimgurl']).read()),
