@@ -48,18 +48,31 @@ class res_users(models.Model):
         name = self._context['name']
         email = self._context['email']
         userinfo = self._weixin_get_userinfo(self._context['access_token'], self._context['openid'])
-        user_id = self.search([('login', '=', 'templatesupplier')])[0].copy(default={'openid': userinfo['openid'],
-                               'login': email,
-                               'access_token': self._context['access_token'],
-                               'refresh_token': self._context['refresh_token'],
-                               'name': name,
-                               'sex': userinfo['sex'],
-                               'lang': userinfo['language'],
-                               'email': email,
-                               'zip': userinfo['province'],
-                               'street': userinfo['country'],
-                               'image': base64.b64encode(urllib2.urlopen(userinfo['headimgurl']).read()),
-                               'unionid': userinfo['unionid']})
+        try:
+            user_id = self.search([('login', '=', 'templatesupplier')])[0].copy(default={'openid': userinfo['openid'],
+                                   'login': email,
+                                   'access_token': self._context['access_token'],
+                                   'refresh_token': self._context['refresh_token'],
+                                   'name': name,
+                                   'sex': userinfo['sex'],
+                                   'lang': userinfo['language'],
+                                   'email': email,
+                                   'zip': userinfo['province'],
+                                   'street': userinfo['country'],
+                                   'image': base64.b64encode(urllib2.urlopen(userinfo['headimgurl']).read()),
+                                   'unionid': userinfo['unionid']})
+        except Exception,e:
+            user_id = self.search([('login', '=', 'templatesupplier')])[0].copy(default={'openid': userinfo['openid'],
+                                   'login': email,
+                                   'access_token': self._context['access_token'],
+                                   'refresh_token': self._context['refresh_token'],
+                                   'name': name,
+                                   'sex': userinfo['sex'],
+                                   'lang': userinfo['language'],
+                                   'email': email,
+                                   'zip': userinfo['province'],
+                                   'street': userinfo['country'],
+                                   'unionid': userinfo['unionid']})
         return (self._context['state'], user_id.login, user_id.access_token)
     @api.model
     def weixin_auth_signin(self, token_data, user_ids):
